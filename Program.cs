@@ -5,11 +5,12 @@ using Pulumi.AzureNative.Network;
 using Pulumi.AzureNative.Network.Inputs;
 using Pulumi.AzureNative.Resources;
 using Pulumi.AzureNative.Storage;
-using Pulumi.AzureNative.Storage.Inputs;
 using System.Collections.Generic;
 using SubnetArgs = Pulumi.AzureNative.Network.Inputs.SubnetArgs;
 using Pulumi.AzureNative.Compute;
 using Pulumi.AzureNative.Compute.Inputs;
+using Components = Bk.Demo.Pulumi.Components;
+using Pulumi.Random;
 
 return await Pulumi.Deployment.RunAsync(() =>
 {
@@ -28,12 +29,12 @@ return await Pulumi.Deployment.RunAsync(() =>
         Location = resourceGroup.Location,
         AddressSpace = new AddressSpaceArgs
         {
-            AddressPrefixes = { "10.0.0.0/16" },
+            AddressPrefixes = { "10.0.0.0/25" },
         },
         Subnets = new SubnetArgs
         {
             Name = "myCoreSubnet",
-            AddressPrefix = "10.0.1.0/24",
+            AddressPrefix = "10.0.1.0/26",
         }
     });
 
@@ -45,13 +46,14 @@ return await Pulumi.Deployment.RunAsync(() =>
         Sku = new AzureNative.Storage.Inputs.SkuArgs { Name = AzureNative.Storage.SkuName.Standard_GRS }
     });
 
+    var sqlServerPassword = new RandomPassword("mySqlServerPassword", new RandomPasswordArgs { Length = 25 });
     var sqlServer = new Server("mySqlServer", new ServerArgs
     {
         ServerName = "mySqlServer",
         ResourceGroupName = resourceGroup.Name,
         Location = resourceGroup.Location,
-        AdministratorLogin = "adminuser",
-        AdministratorLoginPassword = "Password123!",
+        AdministratorLogin = "admin",
+        AdministratorLoginPassword = sqlServerPassword.Result,
     });
 
     var sqlDatabase = new Database("myTestDatabase", new()
@@ -62,9 +64,7 @@ return await Pulumi.Deployment.RunAsync(() =>
         ServerName = sqlServer.Name,
         Sku = new AzureNative.Sql.Inputs.SkuArgs
         {
-            Capacity = 2,
-            Family = "Gen4",
-            Name = "BC",
+            Name = "S0",
         },
     });
 
@@ -128,6 +128,9 @@ return await Pulumi.Deployment.RunAsync(() =>
         },
     });
 
+    var newMyVirtualMachine = new Components.Compute.VirtualMachine("myNewVirtualMachine", resourceGroup.Name, 
+        resourceGroup.Location, virtualNetwork.Id, virtualNetwork.Subnets.First().Apply(x => $"{x.Name}"));
+
     var storageAccountKeys = ListStorageAccountKeys.Invoke(new ListStorageAccountKeysInvokeArgs
     {
         ResourceGroupName = resourceGroup.Name,
@@ -143,6 +146,8 @@ return await Pulumi.Deployment.RunAsync(() =>
     // Export the primary key of the Storage Account
     return new Dictionary<string, object?>
     {
-        ["primaryStorageKey"] = primaryStorageKey,
+        ["PrimaryStorageKey"] = primaryStorageKey,
+        ["SqlPassowrd"] = newMyVirtualMachine.Password,
+        ["VmPassowrd"] = newMyVirtualMachine.Password,
     };
 });
