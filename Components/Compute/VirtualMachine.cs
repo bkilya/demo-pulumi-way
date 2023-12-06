@@ -23,17 +23,17 @@ internal sealed class VirtualMachine : ComponentResource
         ComponentResourceOptions? options = null)
         : base("VirtualMachine", name, options)
     {
-        var password = new RandomPassword("myVirtualMachinePassword", new RandomPasswordArgs { Length = 25 });
+        var password = new RandomPassword($"virtualMachinePassword-{name}", new RandomPasswordArgs { Length = 25 });
 
-        var networkInterface = new NetworkInterface("myNetworkInterface", new()
+        var networkInterface = new NetworkInterface($"networkInterface-{name}", new()
         {
-            NetworkInterfaceName = "myNetworkInterface",
+            NetworkInterfaceName = $"{name}-nic",
             ResourceGroupName = resourceGroupName,
             Location = location,
             EnableAcceleratedNetworking = false,
             IpConfigurations = new NetworkInterfaceIPConfigurationArgs
             {
-                Name = "MyNetworkInterfaceIpConfiguration",
+                Name = $"networkInterfaceIpConfiguration-{name}",
                 PrivateIPAllocationMethod = IPAllocationMethod.Dynamic,
                 Subnet = new AzureNative.Network.Inputs.SubnetArgs
                 {
@@ -42,14 +42,14 @@ internal sealed class VirtualMachine : ComponentResource
             }
         });
 
-        var virtualMachine = new AzureNative.Compute.VirtualMachine("myVirtualMachine", new()
+        var virtualMachine = new AzureNative.Compute.VirtualMachine($"virtualMachine-{name}", new()
         {
-            VmName = "myVirtualMachine",
+            VmName = name,
             ResourceGroupName = resourceGroupName,
             Location = location,
             HardwareProfile = new HardwareProfileArgs
             {
-                VmSize = VirtualMachineSizeTypes.Basic_A1,
+                VmSize = VirtualMachineSizeTypes.Standard_B1s,
             },
             NetworkProfile = new AzureNative.Compute.Inputs.NetworkProfileArgs
             {
@@ -65,7 +65,7 @@ internal sealed class VirtualMachine : ComponentResource
             {
                 AdminPassword = password.Result,
                 AdminUsername = "myVmUser",
-                ComputerName = "myVirtualMachine",
+                ComputerName = name,
             },
             StorageProfile = new StorageProfileArgs
             {
@@ -73,7 +73,7 @@ internal sealed class VirtualMachine : ComponentResource
                 {
                     Offer = "0001-com-ubuntu-server-focal",
                     Publisher = "canonical",
-                    Sku = "20_04_lts-gen2",
+                    Sku = "20_04-lts-gen2",
                     Version = "latest",
                 },
                 OsDisk = new OSDiskArgs

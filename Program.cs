@@ -29,7 +29,7 @@ return await Pulumi.Deployment.RunAsync(() =>
         Location = resourceGroup.Location,
         AddressSpace = new AddressSpaceArgs
         {
-            AddressPrefixes = { "10.0.0.0/25" },
+            AddressPrefixes = { "10.0.1.0/25" },
         },
         Subnets = new SubnetArgs
         {
@@ -40,19 +40,20 @@ return await Pulumi.Deployment.RunAsync(() =>
 
     var storageAccount = new StorageAccount("myStorageAccount", new StorageAccountArgs
     {
-        AccountName = "mystorageaccount",
+        AccountName = "mystorageaccount6874uj78",
         ResourceGroupName = resourceGroup.Name,
         Location = resourceGroup.Location,
+        Kind = Kind.StorageV2,
         Sku = new AzureNative.Storage.Inputs.SkuArgs { Name = AzureNative.Storage.SkuName.Standard_GRS }
     });
 
     var sqlServerPassword = new RandomPassword("mySqlServerPassword", new RandomPasswordArgs { Length = 25 });
     var sqlServer = new Server("mySqlServer", new ServerArgs
     {
-        ServerName = "mySqlServer",
+        ServerName = "mySqlServer6874uj78",
         ResourceGroupName = resourceGroup.Name,
         Location = resourceGroup.Location,
-        AdministratorLogin = "admin",
+        AdministratorLogin = "sqladmin",
         AdministratorLoginPassword = sqlServerPassword.Result,
     });
 
@@ -92,7 +93,7 @@ return await Pulumi.Deployment.RunAsync(() =>
         Location = resourceGroup.Location,
         HardwareProfile = new HardwareProfileArgs
         {
-            VmSize = VirtualMachineSizeTypes.Basic_A1,
+            VmSize = VirtualMachineSizeTypes.Standard_B1s,
         },
         NetworkProfile = new AzureNative.Compute.Inputs.NetworkProfileArgs
         {
@@ -106,7 +107,7 @@ return await Pulumi.Deployment.RunAsync(() =>
         },
         OsProfile = new OSProfileArgs
         {
-            AdminPassword = "{your-password}",
+            AdminPassword = "{Your-Password-1}",
             AdminUsername = "myVmUser",
             ComputerName = "myVirtualMachine",
         },
@@ -116,7 +117,7 @@ return await Pulumi.Deployment.RunAsync(() =>
             {
                 Offer = "0001-com-ubuntu-server-focal",
                 Publisher = "canonical",
-                Sku = "20_04_lts-gen2",
+                Sku = "20_04-lts-gen2",
                 Version = "latest",
             },
             OsDisk = new OSDiskArgs
@@ -128,8 +129,11 @@ return await Pulumi.Deployment.RunAsync(() =>
         },
     });
 
-    var newMyVirtualMachine = new Components.Compute.VirtualMachine("myNewVirtualMachine", resourceGroup.Name, 
-        resourceGroup.Location, virtualNetwork.Id, virtualNetwork.Subnets.First().Apply(x => $"{x.Name}"));
+    var newMyVirtualMachine = new Components.Compute.VirtualMachine("myNewVirtualMachine", 
+        resourceGroup.Name,
+        resourceGroup.Location, 
+        virtualNetwork.Id, 
+        virtualNetwork.Subnets.First().Apply(x => $"{x.Name}"));
 
     var storageAccountKeys = ListStorageAccountKeys.Invoke(new ListStorageAccountKeysInvokeArgs
     {
