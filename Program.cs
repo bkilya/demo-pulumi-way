@@ -151,7 +151,7 @@ return await Pulumi.Deployment.RunAsync(() =>
     return new Dictionary<string, object?>
     {
         ["PrimaryStorageKey"] = primaryStorageKey,
-        ["SqlPassowrd"] = newMyVirtualMachine.Password,
+        ["SqlPassowrd"] = sqlServerPassword.Result,
         ["VmPassowrd"] = newMyVirtualMachine.Password,
     };
 });

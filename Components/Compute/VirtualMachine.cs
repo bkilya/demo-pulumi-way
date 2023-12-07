@@ -78,7 +78,7 @@ internal sealed class VirtualMachine : ComponentResource
                 },
                 OsDisk = new OSDiskArgs
                 {
-                    Name = "myVmOsDisk",
+                    Name = $"{name}-OsDisk",
                     CreateOption = DiskCreateOptionTypes.FromImage,
                     DeleteOption = DiskDeleteOptionTypes.Delete
                 },
